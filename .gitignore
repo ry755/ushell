@@ -1,0 +1,10 @@
+bin
+dep
+esp.cfg
+obj
+.vscode
+
+test.bin
+test.elf
+test.map
+test.out
