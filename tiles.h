@@ -43,17 +43,6 @@ unsigned char res_cursor_mask[8] = {
     0b00000000
 };
 
-/*unsigned char res_cursor[64] = {
-    1,1,1,1,1,1,0,0,
-    1,2,2,2,1,0,0,0,
-    1,2,2,1,0,0,0,0,
-    1,2,1,1,1,0,0,0,
-    1,1,0,0,1,1,0,0,
-    1,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0
-};*/
-
 // 1bpp ASCII font
 const unsigned char res_font[2048] PROGMEM = {
     0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,

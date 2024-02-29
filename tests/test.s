@@ -1,22 +1,26 @@
+.include "syscall.inc"
+
 .global main
 main:
-    ldi r16, 0 ; uS_BeginFrameDraw
+    ldi r16, SYS_BeginFrameDraw
     call 0xEF00
 
     ldi r25, hi8(string)
     ldi r24, lo8(string)
-    ldi r20, 1
-    ldi r18, 1
-    ldi r16, 2 ; Print
+    clr r23
+    ldi r22, 8
+    clr r21
+    ldi r20, 8
+    ldi r16, SYS_BlitStr
     call 0xEF00
 
-    ldi r16, 1 ; uS_EndFrameDraw
+    ldi r16, SYS_EndFrameDraw
     call 0xEF00
 
 loop:
-    ldi r16, 0 ; uS_BeginFrameDraw
+    ldi r16, SYS_BeginFrameDraw
     call 0xEF00
-    ldi r16, 1 ; uS_EndFrameDraw
+    ldi r16, SYS_EndFrameDraw
     call 0xEF00
     rjmp loop
 

@@ -13,21 +13,27 @@
 
 extern u8 sd_buf[512];
 
-u16 uS_Syscall(u16 u16_0, u16 u16_1, u8 u8_0, u8 u8_1, u8 syscall) {
+u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
     // TODO: turn this into an array of function pointers
     switch (syscall) {
-        case 0:
+        case SYS_BeginFrameDraw:
             uS_BeginFrameDraw();
             return 0;
-        case 1:
+        case SYS_EndFrameDraw:
             uS_EndFrameDraw();
             return 0;
-        case 2:
-            Print(u8_0, u8_1, (const char *)u16_0);
+        case SYS_BlitChar:
+            uS_BlitChar((u8)u16_0, u16_1, u16_2);
+            return 0;
+        case SYS_BlitStr:
+            uS_BlitStr((u8 *)u16_0, u16_1, u16_2);
+            return 0;
+        case SYS_BlitStrRam:
+            uS_BlitStrRam((u8 *)u16_0, u16_1, u16_2);
             return 0;
     }
 
-    return 0;
+    return 1;
 }
 
 // install a `jmp uS_Syscall` trampoline opcode to 0xEF00

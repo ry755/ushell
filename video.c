@@ -58,8 +58,8 @@ static u16 const vramrow_offs[32U] PROGMEM = {
 
 static u16 under_cursor[8];
 static bool showing_cursor = false;
-static u16 cursor_x = 0;
-static u16 cursor_y = 0;
+static u16 cursor_x = 384 / 2;
+static u16 cursor_y = 216 / 2;
 
 static u16 framebuffer_addr;
 
@@ -144,11 +144,13 @@ void uS_VideoInit() {
     uS_EndFrameDraw();
 }
 
+// call this at the beginning of your frame loop
 void uS_BeginFrameDraw() {
     uS_HideCursor();
     uS_UpdateMouse();
 }
 
+// call this at the end of your frame loop
 void uS_EndFrameDraw() {
     uS_ShowCursor();
     WaitVsync(1);
@@ -160,4 +162,50 @@ void uS_ClearLowSpiRam() {
         SpiRamSeqWriteU8(0);
     }
     SpiRamSeqWriteEnd();
+}
+
+// blit an 8x8 bitmap to the screen
+// `mask` can be zero to draw the entire bitmap without transparency
+void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
+    u8 default_mask[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+    if (mask == 0) mask = &default_mask[0];
+
+    // thanks to my friend mebibytedraco for helping with this!
+    u16 byte_off = (y * 384 + x) / 8;
+    u8 bit_off = (y * 384 + x) % 8;
+    for (u8 line = 0; line < 8; line++) {
+        u8 high_byte = SpiRamReadU8(0, framebuffer_addr + byte_off);
+        u8 low_byte = SpiRamReadU8(0, framebuffer_addr + byte_off + 1);
+        u16 word = ((u16)high_byte << 8) | low_byte;
+        u16 mask_word = ((u16)mask[line] << 8) >> bit_off;
+        word &= ~mask_word;
+        u16 sprite = ((u16)bitmap[line] << 8) >> bit_off;
+        sprite |= word;
+        SpiRamWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
+        SpiRamWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
+        byte_off += 384 / 8;
+    }
+}
+
+// blit an 8x8 character bitmap to the screen
+void uS_BlitChar(u8 character, u16 x, u16 y) {
+    u8 char_bitmap[8];
+    SpiRamSeqReadStart(M74_M67_FONT_OFF / 65536, (M74_M67_FONT_OFF % 65536) + (character * 8));
+    for (u8 i = 0; i < 8; i++) char_bitmap[i] = SpiRamSeqReadU8();
+    SpiRamSeqReadEnd();
+    uS_Blit(char_bitmap, 0, x, y);
+}
+
+void uS_BlitStr(u8 *str, u16 x, u16 y) {
+    do {
+        uS_BlitChar(pgm_read_byte(str++), x, y);
+        x += 8;
+    } while (pgm_read_byte(str));
+}
+
+void uS_BlitStrRam(u8 *str, u16 x, u16 y) {
+    do {
+        uS_BlitChar(*str, x, y);
+        x += 8;
+    } while (*str++);
 }
