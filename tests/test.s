@@ -10,7 +10,6 @@ main:
 y_loop:
     clr r2 ; X counter
 x_loop:
-    cp r4, r16
     clr r25
     mov r24, r4
     ldi r16, 8
