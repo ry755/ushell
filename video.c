@@ -72,6 +72,8 @@ static void uS_ShowCursor() {
     u16 byte_off = (cursor_y * 384 + cursor_x) / 8;
     u8 bit_off = (cursor_y * 384 + cursor_x) % 8;
     for (u8 line = 0; line < 8; line++) {
+        u8 old_config = m74_config;
+        m74_config = 0;
         u8 high_byte = SpiRamReadU8(0, framebuffer_addr + byte_off);
         u8 low_byte = SpiRamReadU8(0, framebuffer_addr + byte_off + 1);
         u16 word = ((u16)high_byte << 8) | low_byte;
@@ -83,6 +85,7 @@ static void uS_ShowCursor() {
         SpiRamWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
         SpiRamWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
         byte_off += 384 / 8;
+        m74_config = old_config;
     }
 }
 
@@ -92,9 +95,12 @@ static void uS_HideCursor() {
 
     u16 byte_off = (cursor_y * 384 + cursor_x) / 8;
     for (u8 line = 0; line < 8; line++) {
+        u8 old_config = m74_config;
+        m74_config = 0;
         SpiRamWriteU8(0, framebuffer_addr + byte_off, under_cursor[line] >> 8);
         SpiRamWriteU8(0, framebuffer_addr + byte_off + 1, under_cursor[line] & 0xFF);
         byte_off += 384 / 8;
+        m74_config = old_config;
     }
 }
 
@@ -112,6 +118,7 @@ void uS_VideoInit() {
     m74_discol = 0x49;
 
     SpiRamInit();
+    uS_ClearLowSpiRam();
 
     // set rendering parameters for 4:3 display
     SetRenderingParameters(24, 216);
@@ -139,7 +146,6 @@ void uS_VideoInit() {
     SpiRamSeqWriteEnd();
 
     m74_config |= M74_CFG_ENABLE;
-    uS_ClearLowSpiRam();
     WaitVsync(10);
     uS_EndFrameDraw();
 }
@@ -156,12 +162,20 @@ void uS_EndFrameDraw() {
     WaitVsync(1);
 }
 
+void uS_WaitFrame() {
+    uS_EndFrameDraw();
+    uS_BeginFrameDraw();
+}
+
 void uS_ClearLowSpiRam() {
-    SpiRamSeqWriteStart(0, framebuffer_addr);
-    for (u16 i = framebuffer_addr; i != 0xFFFF; i++) {
+    u8 old_config = m74_config;
+    m74_config = 0;
+    SpiRamSeqWriteStart(0, 0);
+    for (u16 i = 0; i != 0xFFFF; i++) {
         SpiRamSeqWriteU8(0);
     }
     SpiRamSeqWriteEnd();
+    m74_config = old_config;
 }
 
 // blit an 8x8 bitmap to the screen
@@ -174,6 +188,8 @@ void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
     u16 byte_off = (y * 384 + x) / 8;
     u8 bit_off = (y * 384 + x) % 8;
     for (u8 line = 0; line < 8; line++) {
+        u8 old_config = m74_config;
+        m74_config = 0;
         u8 high_byte = SpiRamReadU8(0, framebuffer_addr + byte_off);
         u8 low_byte = SpiRamReadU8(0, framebuffer_addr + byte_off + 1);
         u16 word = ((u16)high_byte << 8) | low_byte;
@@ -184,26 +200,28 @@ void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
         SpiRamWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
         SpiRamWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
         byte_off += 384 / 8;
+        m74_config = old_config;
     }
 }
 
 // blit an 8x8 character bitmap to the screen
 void uS_BlitChar(u8 character, u16 x, u16 y) {
     u8 char_bitmap[8];
-    SpiRamSeqReadStart(M74_M67_FONT_OFF / 65536, (M74_M67_FONT_OFF % 65536) + (character * 8));
-    for (u8 i = 0; i < 8; i++) char_bitmap[i] = SpiRamSeqReadU8();
-    SpiRamSeqReadEnd();
+    for (u8 i = 0; i < 8; i++)
+        char_bitmap[i] = pgm_read_byte(&res_font[character * 8 + i]);
     uS_Blit(char_bitmap, 0, x, y);
 }
 
 void uS_BlitStr(u8 *str, u16 x, u16 y) {
+    uS_WaitFrame();
     do {
-        uS_BlitChar(pgm_read_byte(str++), x, y);
+        uS_BlitChar(pgm_read_byte(str), x, y);
         x += 8;
-    } while (pgm_read_byte(str));
+    } while (pgm_read_byte(str++));
 }
 
 void uS_BlitStrRam(u8 *str, u16 x, u16 y) {
+    uS_WaitFrame();
     do {
         uS_BlitChar(*str, x, y);
         x += 8;
