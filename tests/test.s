@@ -5,23 +5,37 @@ main:
     ldi r16, SYS_BeginFrameDraw
     call 0xEF00
 
-    ldi r25, hi8(string)
-    ldi r24, lo8(string)
-    clr r23
-    ldi r22, 8
-    clr r21
-    ldi r20, 8
-    ldi r16, SYS_BlitStr
+    clr r3 ; Y counter
+    clr r4 ; character
+y_loop:
+    clr r2 ; X counter
+x_loop:
+    cp r4, r16
+    clr r25
+    mov r24, r4
+    ldi r16, 8
+    mul r2, r16
+    movw r22, r0
+    mul r3, r16
+    movw r20, r0
+    ldi r16, SYS_BlitChar
     call 0xEF00
 
-    ldi r16, SYS_EndFrameDraw
-    call 0xEF00
+    inc r4
+    breq done
+    inc r2
+    ldi r16, 48
+    cp r2, r16
+    brne x_loop
+    inc r3
+    ldi r16, 27
+    cp r3, r16
+    brne y_loop
 
 loop:
     ldi r16, SYS_BeginFrameDraw
     call 0xEF00
+done:
     ldi r16, SYS_EndFrameDraw
     call 0xEF00
     rjmp loop
-
-string: .asciz "hello world from 'userspace'!!"
