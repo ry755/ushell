@@ -57,6 +57,7 @@ OBJECTS += $(OBJDIR)/flash.o
 OBJECTS += $(OBJDIR)/sd.o
 OBJECTS += $(OBJDIR)/syscall.o
 OBJECTS += $(OBJDIR)/video.o
+OBJECTS += $(OBJDIR)/xram.o
 OBJECTS += $(OBJDIR)/$(GAME).o
 
 ## Include Directories
@@ -110,6 +111,8 @@ $(OBJDIR)/sd.o: sd.c $(DIRS)
 $(OBJDIR)/syscall.o: syscall.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 $(OBJDIR)/video.o: video.c $(DIRS)
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+$(OBJDIR)/xram.o: xram.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 ## Link

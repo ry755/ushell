@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <avr/pgmspace.h>
 #include <uzebox.h>
-#include <spiram.h>
 #include <bootlib.h>
 #include <string.h>
 

@@ -6,6 +6,7 @@
 #include <spiram.h>
 #include <bootlib.h>
 
+#include "xram.h"
 #include "video.h"
 
 #include "tiles.h"
@@ -72,20 +73,17 @@ static void uS_ShowCursor() {
     u16 byte_off = (cursor_y * 384 + cursor_x) / 8;
     u8 bit_off = (cursor_y * 384 + cursor_x) % 8;
     for (u8 line = 0; line < 8; line++) {
-        u8 old_config = m74_config;
-        m74_config = 0;
-        u8 high_byte = SpiRamReadU8(0, framebuffer_addr + byte_off);
-        u8 low_byte = SpiRamReadU8(0, framebuffer_addr + byte_off + 1);
+        u8 high_byte = uS_XramReadU8(0, framebuffer_addr + byte_off);
+        u8 low_byte = uS_XramReadU8(0, framebuffer_addr + byte_off + 1);
         u16 word = ((u16)high_byte << 8) | low_byte;
         under_cursor[line] = word;
         u16 mask = ((u16)res_cursor_mask[line] << 8) >> bit_off;
         word &= ~mask;
         u16 sprite = ((u16)res_cursor[line] << 8) >> bit_off;
         sprite |= word;
-        SpiRamWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
-        SpiRamWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
+        uS_XramWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
+        uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
         byte_off += 384 / 8;
-        m74_config = old_config;
     }
 }
 
@@ -95,12 +93,9 @@ static void uS_HideCursor() {
 
     u16 byte_off = (cursor_y * 384 + cursor_x) / 8;
     for (u8 line = 0; line < 8; line++) {
-        u8 old_config = m74_config;
-        m74_config = 0;
-        SpiRamWriteU8(0, framebuffer_addr + byte_off, under_cursor[line] >> 8);
-        SpiRamWriteU8(0, framebuffer_addr + byte_off + 1, under_cursor[line] & 0xFF);
+        uS_XramWriteU8(0, framebuffer_addr + byte_off, under_cursor[line] >> 8);
+        uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, under_cursor[line] & 0xFF);
         byte_off += 384 / 8;
-        m74_config = old_config;
     }
 }
 
@@ -168,13 +163,19 @@ void uS_WaitFrame() {
 }
 
 void uS_ClearLowSpiRam() {
+    // disable the screen while accessing SPI RAM
+    // this is to prevent data corruption that will occur if the
+    // SPI RAM is accessed right at the beginning of a frame
     u8 old_config = m74_config;
     m74_config = 0;
+
     SpiRamSeqWriteStart(0, 0);
     for (u16 i = 0; i != 0xFFFF; i++) {
         SpiRamSeqWriteU8(0);
     }
     SpiRamSeqWriteEnd();
+
+    // restore the old screen enable state
     m74_config = old_config;
 }
 
@@ -188,19 +189,16 @@ void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
     u16 byte_off = (y * 384 + x) / 8;
     u8 bit_off = (y * 384 + x) % 8;
     for (u8 line = 0; line < 8; line++) {
-        u8 old_config = m74_config;
-        m74_config = 0;
-        u8 high_byte = SpiRamReadU8(0, framebuffer_addr + byte_off);
-        u8 low_byte = SpiRamReadU8(0, framebuffer_addr + byte_off + 1);
+        u8 high_byte = uS_XramReadU8(0, framebuffer_addr + byte_off);
+        u8 low_byte = uS_XramReadU8(0, framebuffer_addr + byte_off + 1);
         u16 word = ((u16)high_byte << 8) | low_byte;
         u16 mask_word = ((u16)mask[line] << 8) >> bit_off;
         word &= ~mask_word;
         u16 sprite = ((u16)bitmap[line] << 8) >> bit_off;
         sprite |= word;
-        SpiRamWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
-        SpiRamWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
+        uS_XramWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
+        uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
         byte_off += 384 / 8;
-        m74_config = old_config;
     }
 }
 
@@ -213,7 +211,6 @@ void uS_BlitChar(u8 character, u16 x, u16 y) {
 }
 
 void uS_BlitStr(u8 *str, u16 x, u16 y) {
-    uS_WaitFrame();
     do {
         uS_BlitChar(pgm_read_byte(str), x, y);
         x += 8;
@@ -221,7 +218,6 @@ void uS_BlitStr(u8 *str, u16 x, u16 y) {
 }
 
 void uS_BlitStrRam(u8 *str, u16 x, u16 y) {
-    uS_WaitFrame();
     do {
         uS_BlitChar(*str, x, y);
         x += 8;
