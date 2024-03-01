@@ -5,6 +5,7 @@
 #include <uzebox.h>
 #include <spiram.h>
 #include <bootlib.h>
+#include <keyboard.h>
 
 #include "xram.h"
 #include "video.h"
@@ -59,10 +60,16 @@ static u16 const vramrow_offs[32U] PROGMEM = {
 
 static u16 under_cursor[8];
 static bool showing_cursor = false;
+static bool mouse_detected = false;
 static u16 cursor_x = 384 / 2;
 static u16 cursor_y = 216 / 2;
 
 static u16 framebuffer_addr;
+
+u8 keyboard_buffer = 0;
+u8 keyboard_mod_buffer = 0;
+
+extern bool snesMouseEnabled;
 
 static void uS_ShowCursor() {
     if (showing_cursor) return;
@@ -100,11 +107,54 @@ static void uS_HideCursor() {
 }
 
 static void uS_UpdateMouse() {
-    u16 buttons = ReadJoypad(0);
+    /*u16 buttons = ReadJoypad(0);
     if (buttons & BTN_UP) cursor_y--;
     if (buttons & BTN_DOWN) cursor_y++;
     if (buttons & BTN_LEFT) cursor_x--;
-    if (buttons & BTN_RIGHT) cursor_x++;
+    if (buttons & BTN_RIGHT) cursor_x++;*/
+
+    u16 mouse = ReadJoypadExt(0);
+    s16 mx = cursor_x;
+    s16 my = cursor_y;
+
+    if (mouse & 0x80) {
+        mx -= (mouse & 0x7F);
+        if (mx < 0) mx = 0;
+    } else {
+        mx += (mouse & 0x7F);
+        if (mx > 383) mx = 383;
+    }
+
+    if (mouse & 0x8000) {
+        my -= ((mouse >> 8) & 0x7F);
+        if (my < 0) my = 0;
+    } else {
+        my += ((mouse >> 8) & 0x7F);
+        if (my > 215) my = 215;
+    }
+
+    cursor_x = (u16)mx;
+    cursor_y = (u16)my;
+}
+
+static void uS_UpdateKeyboard() {
+    KeyboardPoll();
+    keyboard_buffer = KeyboardGetKey(true);
+    keyboard_mod_buffer = KeyboardGetModifiers();
+
+    if (!mouse_detected) {
+        switch (keyboard_buffer) {
+            case KB_UP: cursor_y -= 2; break;
+            case KB_DOWN: cursor_y += 2; break;
+            case KB_LEFT: cursor_x -= 2; break;
+            case KB_RIGHT: cursor_x += 2; break;
+            default: break;
+        }
+        if ((s16)cursor_x < 0) cursor_x = 0;
+        if ((s16)cursor_x > 383) cursor_x = 383;
+        if ((s16)cursor_y < 0) cursor_y = 0;
+        if ((s16)cursor_y > 215) cursor_x = 215;
+    }
 }
 
 void uS_VideoInit() {
@@ -141,14 +191,22 @@ void uS_VideoInit() {
     SpiRamSeqWriteEnd();
 
     m74_config |= M74_CFG_ENABLE;
-    WaitVsync(10);
+    WaitVsync(8);
+    snesMouseEnabled = true;
+    WaitVsync(20);
     uS_EndFrameDraw();
 }
 
 // call this at the beginning of your frame loop
 void uS_BeginFrameDraw() {
     uS_HideCursor();
-    uS_UpdateMouse();
+    if ((DetectControllers() & 2) == 2) {
+        mouse_detected = true;
+        uS_UpdateMouse();
+    } else {
+        mouse_detected = false;
+    }
+    uS_UpdateKeyboard();
 }
 
 // call this at the end of your frame loop
@@ -157,6 +215,7 @@ void uS_EndFrameDraw() {
     WaitVsync(1);
 }
 
+// wait for a new frame, while also keeping the mouse and keyboard polled
 void uS_WaitFrame() {
     uS_EndFrameDraw();
     uS_BeginFrameDraw();
@@ -210,7 +269,7 @@ void uS_BlitChar(u8 character, u16 x, u16 y) {
     uS_Blit(char_bitmap, 0, x, y);
 }
 
-void uS_BlitStr(u8 *str, u16 x, u16 y) {
+void uS_BlitStr(const u8 *str, u16 x, u16 y) {
     do {
         uS_BlitChar(pgm_read_byte(str), x, y);
         x += 8;

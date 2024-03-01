@@ -11,15 +11,22 @@
 #include "video.h"
 
 extern u8 sd_buf[512];
+extern u8 keyboard_buffer;
+extern u8 keyboard_mod_buffer;
 
 u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
-    // TODO: turn this into an array of function pointers
     switch (syscall) {
         case SYS_BeginFrameDraw:
             uS_BeginFrameDraw();
             return 0;
         case SYS_EndFrameDraw:
             uS_EndFrameDraw();
+            return 0;
+        case SYS_WaitFrame:
+            uS_WaitFrame();
+            return 0;
+        case SYS_Blit:
+            uS_Blit((u8 *)u16_0, (u8 *)u16_1, u16_2, u16_3);
             return 0;
         case SYS_BlitChar:
             uS_BlitChar((u8)u16_0, u16_1, u16_2);
@@ -30,6 +37,8 @@ u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
         case SYS_BlitStrRam:
             uS_BlitStrRam((u8 *)u16_0, u16_1, u16_2);
             return 0;
+        case SYS_GetKey:
+            return (keyboard_mod_buffer << 8) | keyboard_buffer;
     }
 
     return 1;

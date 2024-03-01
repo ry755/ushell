@@ -11,6 +11,20 @@
 u8 sd_buf[512];
 sdc_struct_t sd_struct;
 
+extern bool snesMouseEnabled;
+bool old_sd_state;
+
+static void uS_SDStartOp() {
+    // we have to disable the mouse before accessing the SD card
+    // probably due to timing issues? not sure
+    old_sd_state = snesMouseEnabled;
+    snesMouseEnabled = false;
+}
+
+static void uS_SDEndOp() {
+    snesMouseEnabled = old_sd_state;
+}
+
 bool uS_SDInit() {
     sd_struct.bufp = &(sd_buf[0]);
     if (FS_Init(&sd_struct) != 0) return false;
@@ -18,6 +32,8 @@ bool uS_SDInit() {
 }
 
 bool uS_SDOpen(sd_file_name_t file_name, sd_file_t *file) {
+    uS_SDStartOp();
+
     u32 result = FS_Find(&sd_struct,
         ((u16)(file_name[0]) << 8) |
         ((u16)(file_name[1])),
@@ -32,11 +48,16 @@ bool uS_SDOpen(sd_file_name_t file_name, sd_file_t *file) {
         ((u16)(file_name[10]) << 8) |
         ((u16)(0))
     );
-    if (result == 0) return false;
+    if (result == 0) {
+        uS_SDEndOp();
+        return false;
+    }
 
     FS_Select_Cluster(&sd_struct, result);
     file->starting_cluster = result;
     file->current_position = FS_Get_Pos(&sd_struct);
+
+    uS_SDEndOp();
     return true;
 }
 
@@ -46,6 +67,8 @@ bool uS_SDOpen(sd_file_name_t file_name, sd_file_t *file) {
 // NOTE: you must copy the sector data to your own buffer if you intend to access it for long periods of time!
 //       reading another sector (even a sector in a different file) will overwrite the internal buffer!
 const u8 *uS_SDReadFileSector(sd_file_t *file, u32 sector) {
+    uS_SDStartOp();
+
     // set the cluster and sector positions
     FS_Select_Cluster(&sd_struct, file->starting_cluster);
     FS_Set_Pos(&sd_struct, file->current_position);
@@ -57,5 +80,7 @@ const u8 *uS_SDReadFileSector(sd_file_t *file, u32 sector) {
 
     // read a sector and return a pointer to the sector buffer
     FS_Read_Sector(&sd_struct);
+
+    uS_SDEndOp();
     return &sd_buf[0];
 }

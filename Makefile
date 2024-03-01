@@ -16,7 +16,7 @@ DIRS    = $(OUTDIR) $(OBJDIR) $(DEPDIR)
 ## Kernel settings
 UZEBIN_DIR = kernel-tools/bin
 KERNEL_DIR = kernel-tools/kernel
-KERNEL_OPTIONS = -DVIDEO_MODE=748 -DINTRO_LOGO=0 -DSOUND_MIXER=MIXER_TYPE_INLINE
+KERNEL_OPTIONS = -DVIDEO_MODE=748 -DSNES_MOUSE=1 -DINTRO_LOGO=0 -DSOUND_MIXER=MIXER_TYPE_INLINE
 
 
 ## Options common to compile, link and assembly rules
@@ -53,6 +53,7 @@ OBJECTS += $(OBJDIR)/uzeboxSoundEngineCore.o
 OBJECTS += $(OBJDIR)/uzeboxVideoEngine.o
 OBJECTS += $(OBJDIR)/spiram.o
 OBJECTS += $(OBJDIR)/bootlib.o
+OBJECTS += $(OBJDIR)/keyboard.o
 OBJECTS += $(OBJDIR)/flash.o
 OBJECTS += $(OBJDIR)/sd.o
 OBJECTS += $(OBJDIR)/syscall.o
@@ -100,6 +101,9 @@ $(OBJDIR)/spiram.o: $(KERNEL_DIR)/spiram.s $(DIRS)
 
 $(OBJDIR)/bootlib.o: $(KERNEL_DIR)/bootlib.s $(DIRS)
 	$(CC) $(INCLUDES) $(ASMFLAGS) -c $< -o $@
+
+$(OBJDIR)/keyboard.o: $(KERNEL_DIR)/keyboard.c $(DIRS)
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 ## Compile game sources
 $(OBJDIR)/$(GAME).o: main.c $(DIRS)
