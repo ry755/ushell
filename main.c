@@ -13,18 +13,12 @@
 int main() {
     bool sd_ok = uS_SDInit();
     uS_VideoInit();
-    if (!sd_ok) {
-        uS_BlitStr((const u8 *)PSTR("No SD Card?"), 1, 1);
-        while (true) uS_WaitFrame();
-    }
+    if (!sd_ok) uS_Die("SD card?");
     uS_SyscallTrampolineInstall();
 
     sd_file_name_t file_name = { 'T', 'E', 'S', 'T', ' ', ' ', ' ', ' ', 'B', 'I', 'N' };
     sd_file_t file;
-    if (!uS_SDOpen(file_name, &file)) {
-        uS_BlitStr((const u8 *)PSTR("test.bin?"), 1, 1);
-        while (true) uS_WaitFrame();
-    }
+    if (!uS_SDOpen(file_name, &file)) uS_Die("test.bin?");
     uS_FlashFile(&file, USER_FLASH_PAGE, USER_FLASH_PAGE+1);
 
     asm ("jmp 0x8000");

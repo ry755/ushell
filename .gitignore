@@ -4,7 +4,7 @@ esp.cfg
 obj
 .vscode
 
-test.bin
-test.elf
-test.map
-test.out
+tests/*.bin
+tests/*.elf
+tests/*.map
+tests/*.out

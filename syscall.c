@@ -29,13 +29,13 @@ u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
             uS_Blit((u8 *)u16_0, (u8 *)u16_1, u16_2, u16_3);
             return 0;
         case SYS_BlitChar:
-            uS_BlitChar((u8)u16_0, u16_1, u16_2);
+            uS_BlitChar((char)u16_0, u16_1, u16_2);
             return 0;
         case SYS_BlitStr:
-            uS_BlitStr((u8 *)u16_0, u16_1, u16_2);
+            uS_BlitStr((char *)u16_0, u16_1, u16_2);
             return 0;
         case SYS_BlitStrRam:
-            uS_BlitStrRam((u8 *)u16_0, u16_1, u16_2);
+            uS_BlitStrRam((char *)u16_0, u16_1, u16_2);
             return 0;
         case SYS_GetKey:
             return (keyboard_mod_buffer << 8) | keyboard_buffer;

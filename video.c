@@ -197,6 +197,12 @@ void uS_VideoInit() {
     uS_EndFrameDraw();
 }
 
+void uS_Die(char *string) {
+    uS_HideCursor();
+    uS_BlitStrRam(string, 0, 0);
+    while (true);
+}
+
 // call this at the beginning of your frame loop
 void uS_BeginFrameDraw() {
     uS_HideCursor();
@@ -262,21 +268,21 @@ void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
 }
 
 // blit an 8x8 character bitmap to the screen
-void uS_BlitChar(u8 character, u16 x, u16 y) {
+void uS_BlitChar(unsigned char character, u16 x, u16 y) {
     u8 char_bitmap[8];
     for (u8 i = 0; i < 8; i++)
         char_bitmap[i] = pgm_read_byte(&res_font[character * 8 + i]);
     uS_Blit(char_bitmap, 0, x, y);
 }
 
-void uS_BlitStr(const u8 *str, u16 x, u16 y) {
+void uS_BlitStr(const char *str, u16 x, u16 y) {
     do {
         uS_BlitChar(pgm_read_byte(str), x, y);
         x += 8;
     } while (pgm_read_byte(str++));
 }
 
-void uS_BlitStrRam(u8 *str, u16 x, u16 y) {
+void uS_BlitStrRam(char *str, u16 x, u16 y) {
     do {
         uS_BlitChar(*str, x, y);
         x += 8;
