@@ -6,8 +6,9 @@
 #include <spiram.h>
 #include <keyboard.h>
 
-#include "xram.h"
+#include "mouse.h"
 #include "video.h"
+#include "xram.h"
 
 #include "tiles.h"
 
@@ -69,6 +70,7 @@ u8 keyboard_buffer = 0;
 u8 keyboard_mod_buffer = 0;
 
 extern bool snesMouseEnabled;
+extern u16 mouse_state;
 
 static void uS_ShowCursor() {
     if (showing_cursor) return;
@@ -112,7 +114,7 @@ static void uS_UpdateMouse() {
     if (buttons & BTN_LEFT) cursor_x--;
     if (buttons & BTN_RIGHT) cursor_x++;*/
 
-    u16 mouse = ReadJoypadExt(0);
+    u16 mouse = mouse_state;
     s16 mx = cursor_x;
     s16 my = cursor_y;
 
@@ -197,6 +199,7 @@ void uS_VideoInit() {
     m74_config |= M74_CFG_ENABLE;
     WaitVsync(8);
     snesMouseEnabled = true;
+    SetUserPostVsyncCallback(uS_ReadMouse);
     WaitVsync(20);
     uS_EndFrameDraw();
 }
@@ -210,12 +213,13 @@ void uS_Die(char *string) {
 // call this at the beginning of your frame loop
 void uS_BeginFrameDraw() {
     uS_HideCursor();
-    if ((DetectControllers() & 2) == 2) {
-        mouse_detected = true;
-        uS_UpdateMouse();
-    } else {
-        mouse_detected = false;
-    }
+    //if ((DetectControllers() & 2) == 2) {
+    //    mouse_detected = true;
+    //    uS_UpdateMouse();
+    //} else {
+    //    mouse_detected = false;
+    //}
+    uS_UpdateMouse();
     uS_UpdateKeyboard();
 }
 

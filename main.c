@@ -9,6 +9,8 @@
 #include "syscall.h"
 #include "video.h"
 
+#define STARTUP_APP "/ushell/key_test.bin"
+
 int main() {
     u8 sd_ok = uS_SDInit();
     uS_VideoInit();
@@ -19,8 +21,8 @@ int main() {
     if (!uS_BootloaderCheck()) uS_Die("Bootloader?");
     uS_SyscallTrampolineInstall();
 
-    sd_file_t test_bin;
-    if (!uS_SDOpenFile(&test_bin, "/test.bin", SD_READ)) uS_Die("test.bin?");
-    uS_FlashFile(&test_bin, USER_FLASH_PAGE);
+    sd_file_t startup_app;
+    if (!uS_SDOpenFile(&startup_app, STARTUP_APP, SD_READ)) uS_Die("Startup app?");
+    uS_FlashFile(&startup_app, USER_FLASH_PAGE);
     asm ("jmp 0x8000");
 }
