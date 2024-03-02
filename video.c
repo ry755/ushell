@@ -76,8 +76,8 @@ static void uS_ShowCursor() {
 
     // draw the cursor, saving what's under it
     // thanks to my friend mebibytedraco for helping with this!
-    u16 byte_off = (cursor_y * 384 + cursor_x) / 8;
-    u8 bit_off = (cursor_y * 384 + cursor_x) % 8;
+    u16 byte_off = (cursor_y * 384L + cursor_x) / 8L;
+    u8 bit_off = (cursor_y * 384L + cursor_x) % 8;
     for (u8 line = 0; line < 8; line++) {
         u8 high_byte = uS_XramReadU8(0, framebuffer_addr + byte_off);
         u8 low_byte = uS_XramReadU8(0, framebuffer_addr + byte_off + 1);
@@ -89,7 +89,7 @@ static void uS_ShowCursor() {
         sprite |= word;
         uS_XramWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
         uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
-        byte_off += 384 / 8;
+        byte_off += 384L / 8L;
     }
 }
 
@@ -97,11 +97,11 @@ static void uS_HideCursor() {
     if (!showing_cursor) return;
     showing_cursor = false;
 
-    u16 byte_off = (cursor_y * 384 + cursor_x) / 8;
+    u16 byte_off = (cursor_y * 384L + cursor_x) / 8L;
     for (u8 line = 0; line < 8; line++) {
         uS_XramWriteU8(0, framebuffer_addr + byte_off, under_cursor[line] >> 8);
         uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, under_cursor[line] & 0xFF);
-        byte_off += 384 / 8;
+        byte_off += 384L / 8L;
     }
 }
 
@@ -255,7 +255,7 @@ void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
     if (mask == 0) mask = &default_mask[0];
 
     // thanks to my friend mebibytedraco for helping with this!
-    u16 byte_off = (y * 384 + x) / 8;
+    u16 byte_off = (y * 384L + x) / 8L;
     u8 bit_off = (y * 384 + x) % 8;
     for (u8 line = 0; line < 8; line++) {
         u8 high_byte = uS_XramReadU8(0, framebuffer_addr + byte_off);
@@ -267,7 +267,7 @@ void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
         sprite |= word;
         uS_XramWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
         uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
-        byte_off += 384 / 8;
+        byte_off += 384L / 8L;
     }
 }
 
