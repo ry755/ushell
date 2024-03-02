@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <avr/pgmspace.h>
 #include <uzebox.h>
-#include <bootlib.h>
 
 #include "flash.h"
 #include "sd.h"
@@ -11,21 +10,17 @@
 #include "video.h"
 
 int main() {
-    bool sd_ok = uS_SDInit();
+    u8 sd_ok = uS_SDInit();
     uS_VideoInit();
-    if (!sd_ok) {
-        uS_BlitStr((const u8 *)PSTR("No SD Card?"), 1, 1);
-        while (true) uS_WaitFrame();
+    if (sd_ok != 0) {
+        uS_BlitChar('0' + sd_ok, 0, 8);
+        uS_Die("SD card?");
     }
+    if (!uS_BootloaderCheck()) uS_Die("Bootloader?");
     uS_SyscallTrampolineInstall();
 
-    sd_file_name_t file_name = { 'T', 'E', 'S', 'T', ' ', ' ', ' ', ' ', 'B', 'I', 'N' };
-    sd_file_t file;
-    if (!uS_SDOpen(file_name, &file)) {
-        uS_BlitStr((const u8 *)PSTR("test.bin?"), 1, 1);
-        while (true) uS_WaitFrame();
-    }
-    uS_FlashFile(&file, USER_FLASH_PAGE, USER_FLASH_PAGE+1);
-
+    sd_file_t test_bin;
+    if (!uS_SDOpenFile(&test_bin, "/test.bin", SD_READ)) uS_Die("test.bin?");
+    uS_FlashFile(&test_bin, USER_FLASH_PAGE);
     asm ("jmp 0x8000");
 }

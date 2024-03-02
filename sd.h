@@ -3,16 +3,21 @@
 
 #include <stdbool.h>
 #include <uzebox.h>
+#include <fatfs/ff.h>
 
-typedef char sd_file_name_t[11];
+#define	SD_OPEN_EXISTING 0x00
+#define	SD_READ          0x01
+#define	SD_WRITE         0x02
+#define	SD_CREATE_NEW    0x04
+#define	SD_CREATE_ALWAYS 0x08
+#define	SD_OPEN_ALWAYS   0x10
 
 typedef struct {
-    u32 starting_cluster;
-    u32 current_position;
+    FIL file;
 } sd_file_t;
 
-bool uS_SDInit();
-bool uS_SDOpen(sd_file_name_t file_name, sd_file_t *file);
-const u8 *uS_SDReadFileSector(sd_file_t *file, u32 sector);
+u8 uS_SDInit();
+bool uS_SDOpenFile(sd_file_t *file, char *file_name, u8 mode);
+u16 uS_SDReadFile(sd_file_t *file, u16 bytes_to_read, u16 byte_offset, u8 *buffer);
 
 #endif

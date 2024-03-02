@@ -52,8 +52,10 @@ OBJECTS += $(OBJDIR)/uzeboxSoundEngine.o
 OBJECTS += $(OBJDIR)/uzeboxSoundEngineCore.o
 OBJECTS += $(OBJDIR)/uzeboxVideoEngine.o
 OBJECTS += $(OBJDIR)/spiram.o
-OBJECTS += $(OBJDIR)/bootlib.o
 OBJECTS += $(OBJDIR)/keyboard.o
+OBJECTS += $(OBJDIR)/mmc.o
+OBJECTS += $(OBJDIR)/ff.o
+
 OBJECTS += $(OBJDIR)/flash.o
 OBJECTS += $(OBJDIR)/sd.o
 OBJECTS += $(OBJDIR)/syscall.o
@@ -99,11 +101,14 @@ $(OBJDIR)/uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c $(DIRS)
 $(OBJDIR)/spiram.o: $(KERNEL_DIR)/spiram.s $(DIRS)
 	$(CC) $(INCLUDES) $(ASMFLAGS) -c $< -o $@
 
-$(OBJDIR)/bootlib.o: $(KERNEL_DIR)/bootlib.s $(DIRS)
-	$(CC) $(INCLUDES) $(ASMFLAGS) -c $< -o $@
-
 $(OBJDIR)/keyboard.o: $(KERNEL_DIR)/keyboard.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/mmc.o: $(KERNEL_DIR)/fatfs/mmc.c $(DIRS)
+	$(CC) $(INCLUDES) $(CFLAGS) -Wno-unused-variable -c $< -o $@
+
+$(OBJDIR)/ff.o: $(KERNEL_DIR)/fatfs/ff.c $(DIRS)
+	$(CC) $(INCLUDES) $(CFLAGS) -Wno-strict-aliasing -c $< -o $@
 
 ## Compile game sources
 $(OBJDIR)/$(GAME).o: main.c $(DIRS)
