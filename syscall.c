@@ -12,6 +12,9 @@
 extern u8 page_buffer[256];
 extern u8 keyboard_buffer;
 extern u8 keyboard_mod_buffer;
+extern u16 cursor_x;
+extern u16 cursor_y;
+extern u16 mouse_buttons;
 
 u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
     switch (syscall) {
@@ -24,7 +27,14 @@ u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
         case SYS_WaitFrame:
             uS_WaitFrame();
             return 0;
-        case SYS_Blit:
+        case SYS_Blit: {
+            u8 bitmap[8];
+            u8 mask[8];
+            for (u8 i = 0; i < 8; i++) bitmap[i] = pgm_read_byte(u16_0 + i);
+            for (u8 i = 0; i < 8; i++) mask[i] = pgm_read_byte(u16_1 + i);
+            uS_Blit(bitmap, mask, u16_2, u16_3);
+        }
+        case SYS_BlitRam:
             uS_Blit((u8 *)u16_0, (u8 *)u16_1, u16_2, u16_3);
             return 0;
         case SYS_BlitChar:
@@ -38,9 +48,16 @@ u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
             return 0;
         case SYS_GetKey:
             return (keyboard_mod_buffer << 8) | keyboard_buffer;
-    }
+        case SYS_GetMouseButtons:
+            return mouse_buttons;
+        case SYS_GetMouseX:
+            return cursor_x;
+        case SYS_GetMouseY:
+            return cursor_y;
 
-    return 1;
+        default:
+            return 0;
+    }
 }
 
 // install a `jmp uS_Syscall` trampoline opcode to 0xEF00

@@ -2,9 +2,8 @@
 
 #define uS_Wait200ns() asm volatile ("lpm\n\tlpm\n\t");
 
-static u16 temp_pad_state;
-
 u16 mouse_state;
+u16 mouse_buttons;
 
 // see this forum post for details: https://uzebox.org/forums/viewtopic.php?p=36055#p36055
 void uS_ReadMouse() {
@@ -29,11 +28,11 @@ void uS_ReadMouse() {
         for (u8 j = 0; j < 33; j++) uS_Wait200ns();
     }
 
-    temp_pad_state = buttons;
+    mouse_buttons = buttons;
     buttons = 0;
     for (i = 0; i < 8; i++) uS_Wait200ns(); // wait 1.6us
 
-    if (temp_pad_state == (BTN_START+BTN_SELECT+BTN_Y+BTN_B)) SoftReset();
+    if (mouse_buttons == (BTN_START+BTN_SELECT+BTN_Y+BTN_B)) SoftReset();
 
     // Read extended mouse data on both ports (it's fine if there is no mouse there)
     for (i = 0; i < 16; i++) {

@@ -61,13 +61,13 @@ static u16 const vramrow_offs[32U] PROGMEM = {
 static u16 under_cursor[8];
 static bool showing_cursor = false;
 static bool mouse_detected = false;
-static u16 cursor_x = 384 / 2;
-static u16 cursor_y = 216 / 2;
-
-static u16 framebuffer_addr;
+u16 cursor_x = 384 / 2;
+u16 cursor_y = 216 / 2;
 
 u8 keyboard_buffer = 0;
 u8 keyboard_mod_buffer = 0;
+
+static u16 framebuffer_addr;
 
 extern bool snesMouseEnabled;
 extern u16 mouse_state;
