@@ -9,7 +9,7 @@
 #include "syscall.h"
 #include "video.h"
 
-#define STARTUP_APP "/ushell/paint.bin"
+#define STARTUP_APP "/ushell/hello.bin"
 
 int main() {
     u8 sd_ok = uS_SDInit();
