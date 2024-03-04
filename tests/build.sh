@@ -10,7 +10,7 @@ function build_asm {
 }
 
 function build_c {
-    avr-gcc -mmcu=atmega644 -DF_CPU=28636360UL -Os -T ushell.ld $1.c ushell.c -o $1.elf
+    avr-gcc -mmcu=atmega644 -DF_CPU=28636360UL -Os -T ushell.ld startup.s $1.c ushell.c -o $1.elf
     avr-objcopy -O binary $1.elf $1.bin
     cp $1.bin ../bin/ushell/
 }
