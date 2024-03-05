@@ -18,6 +18,7 @@ static u8 old_video_config;
 static void uS_SDBeginOp() {
     old_video_config = m74_config;
     m74_config = 0;
+    disk_initialize(0);
 }
 
 static void uS_SDEndOp() {
