@@ -27,6 +27,7 @@ u8 uS_FlashPage(u8 *source, u8 target_page) {
         "movw r24, %0"  "\n\t"
         "mov r22, %1"   "\n\t"
         "call 0xFFAA"   "\n\t" // call Prog_Page
+        "cli"           "\n\t"
         "ldi r31, 1"    "\n\t" // ldi r31, (1 << ICVE)
         "out 0x35, r31" "\n\t" // out MCUCR, r31
         "ldi r31, 0"    "\n\t" // ldi r31, 0 ; move vectors back to start of flash

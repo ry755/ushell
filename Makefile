@@ -68,10 +68,13 @@ OBJECTS += $(OBJDIR)/$(GAME).o
 INCLUDES = -I. -I"$(KERNEL_DIR)"
 
 ## Build
-all: $(UZEBIN_DIR)/packrom $(OUTDIR)/$(TARGET) $(OUTDIR)/$(GAME).hex $(OUTDIR)/$(GAME).lss $(OUTDIR)/$(GAME).uze size
+all: $(UZEBIN_DIR)/packrom apps $(OUTDIR)/$(TARGET) $(OUTDIR)/$(GAME).hex $(OUTDIR)/$(GAME).lss $(OUTDIR)/$(GAME).uze size
 
 $(UZEBIN_DIR)/packrom:
 	cd $(UZEBIN_DIR)/.. && $(MAKE) tools
+
+apps: $(DIRS)
+	cd applications && $(MAKE)
 
 ## Directories
 $(OBJDIR):

@@ -18,4 +18,3 @@ function build_c {
 build_asm test
 build_asm key_test
 build_asm paint
-build_c hello

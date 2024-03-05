@@ -33,12 +33,13 @@ u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
             for (u8 i = 0; i < 8; i++) bitmap[i] = pgm_read_byte(u16_0 + i);
             for (u8 i = 0; i < 8; i++) mask[i] = pgm_read_byte(u16_1 + i);
             uS_Blit(bitmap, mask, u16_2, u16_3);
+            return 0;
         }
         case SYS_BlitRam:
             uS_Blit((u8 *)u16_0, (u8 *)u16_1, u16_2, u16_3);
             return 0;
         case SYS_BlitChar:
-            uS_BlitChar((char)u16_0, u16_1, u16_2);
+            uS_BlitChar((unsigned char)u16_0, u16_1, u16_2);
             return 0;
         case SYS_BlitStr:
             uS_BlitStr((char *)u16_0, u16_1, u16_2);
@@ -54,6 +55,16 @@ u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
             return cursor_x;
         case SYS_GetMouseY:
             return cursor_y;
+        case SYS_Open:
+            return uS_SDOpenFile((sd_file_t *)u16_0, (char *)u16_1, (u8)u16_2);
+        case SYS_Close:
+            return uS_SDCloseFile((sd_file_t *)u16_0);
+        case SYS_OpenDir:
+            return uS_SDOpenDir((sd_dir_t *)u16_0, (char *)u16_1);
+        case SYS_Read:
+            return uS_SDReadFile((sd_file_t *)u16_0, u16_1, u16_2, (u8 *)u16_3);
+        case SYS_ReadDir:
+            return uS_SDReadDir((sd_dir_t *)u16_0, (sd_file_info_t *)u16_1);
 
         default:
             return 0;
