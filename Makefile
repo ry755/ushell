@@ -81,7 +81,7 @@ $(OBJDIR):
 	mkdir $(OBJDIR)
 
 $(OUTDIR):
-	mkdir $(OUTDIR)
+	mkdir -p $(OUTDIR)/ushell
 
 $(DEPDIR):
 	mkdir $(DEPDIR)
@@ -156,4 +156,5 @@ size: $(OUTDIR)/${TARGET}
 ## Clean target
 .PHONY: clean
 clean:
+	cd applications && $(MAKE) clean
 	-rm -rf $(DIRS)
