@@ -20,6 +20,8 @@
 #define SYS_OpenDir         14
 #define SYS_Read            15
 #define SYS_ReadDir         16
+#define SYS_Exec            17
+#define SYS_EnableVideo     18
 
 u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall);
 void uS_SyscallTrampolineInstall();

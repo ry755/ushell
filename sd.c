@@ -10,6 +10,7 @@
 #include "sd.h"
 
 FATFS fs;
+bool sd_needs_reinit = true;
 
 static u8 old_video_config;
 
@@ -18,11 +19,15 @@ static u8 old_video_config;
 static void uS_SDBeginOp() {
     old_video_config = m74_config;
     m74_config = 0;
-    disk_initialize(0);
+    if (sd_needs_reinit) {
+        disk_initialize(0);
+        sd_needs_reinit = false;
+    }
 }
 
 static void uS_SDEndOp() {
     m74_config = old_video_config;
+    sd_needs_reinit = (bool)old_video_config;
 }
 
 u8 uS_SDInit() {

@@ -53,6 +53,16 @@ void uS_FlashFile(sd_file_t *file, u8 starting_target_page) {
     }
 }
 
+// execute an application specified by the path
+// returns only if the specified file failed to open
+void uS_Exec(char *path) {
+    sd_file_t app;
+    if (!uS_SDOpenFile(&app, path, SD_READ)) return;
+    uS_FlashFile(&app, USER_FLASH_PAGE);
+    m74_config |= M74_CFG_ENABLE;
+    asm ("jmp 0x8000");
+}
+
 bool uS_BootloaderCheck() {
     if (pgm_read_byte(0xFFAA) != 0xDC) return false;
     if (pgm_read_byte(0xFFAB) != 0x01) return false;

@@ -19,3 +19,5 @@ bool uS_Close(sd_file_t *file) { return uS_Syscall((u16)file, 0, 0, 0, SYS_Close
 bool uS_OpenDir(sd_dir_t *dir, char *path) { return uS_Syscall((u16)dir, (u16)path, 0, 0, SYS_OpenDir); }
 u16 uS_Read(sd_file_t *file, u16 bytes_to_read, u16 byte_offset, u8 *buffer) { return uS_Syscall((u16)file, bytes_to_read, byte_offset, (u16)buffer, SYS_Read); }
 bool uS_ReadDir(sd_dir_t *dir, sd_file_info_t *file) { return uS_Syscall((u16)dir, (u16)file, 0, 0, SYS_ReadDir); }
+void uS_Exec(char *path) { uS_Syscall((u16)path, 0, 0, 0, SYS_Exec); }
+void uS_EnableVideo(bool enable) { uS_Syscall((u16)enable, 0, 0, 0, SYS_EnableVideo); }

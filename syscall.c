@@ -15,6 +15,7 @@ extern u8 keyboard_mod_buffer;
 extern u16 cursor_x;
 extern u16 cursor_y;
 extern u16 mouse_buttons;
+extern bool sd_needs_reinit;
 
 u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
     switch (syscall) {
@@ -65,6 +66,17 @@ u16 uS_Syscall(u16 u16_0, u16 u16_1, u16 u16_2, u16 u16_3, u8 syscall) {
             return uS_SDReadFile((sd_file_t *)u16_0, u16_1, u16_2, (u8 *)u16_3);
         case SYS_ReadDir:
             return uS_SDReadDir((sd_dir_t *)u16_0, (sd_file_info_t *)u16_1);
+        case SYS_Exec:
+            uS_Exec((char *)u16_0); // doesn't return on success
+            return -1;
+        case SYS_EnableVideo:
+            if (u16_0 != 0) {
+                m74_config |= M74_CFG_ENABLE;
+                sd_needs_reinit = true;
+            } else {
+                m74_config = 0;
+            }
+            return 0;
 
         default:
             return 0;

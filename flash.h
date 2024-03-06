@@ -9,6 +9,7 @@
 
 u8 uS_FlashPage(u8 *source, u8 target_page);
 void uS_FlashFile(sd_file_t *file, u8 starting_target_page);
+void uS_Exec(char *path);
 bool uS_BootloaderCheck();
 
 #endif

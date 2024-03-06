@@ -22,6 +22,11 @@
 #define SYS_OpenDir         14
 #define SYS_Read            15
 #define SYS_ReadDir         16
+#define SYS_Exec            17
+#define SYS_EnableVideo     18
+
+#define LEFT_MOUSE_BUTTON (2 << 8)
+#define RIGHT_MOUSE_BUTTON (1 << 8)
 
 typedef uint8_t  u8;
 typedef int8_t   s8;
@@ -88,5 +93,7 @@ bool uS_Close(sd_file_t *file);
 bool uS_OpenDir(sd_dir_t *dir, char *path);
 u16 uS_Read(sd_file_t *file, u16 bytes_to_read, u16 byte_offset, u8 *buffer);
 bool uS_ReadDir(sd_dir_t *dir, sd_file_info_t *file);
+void uS_Exec(char *path);
+void uS_EnableVideo(bool enable);
 
 #endif

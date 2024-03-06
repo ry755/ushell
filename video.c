@@ -226,6 +226,10 @@ void uS_BeginFrameDraw() {
 // call this at the end of your frame loop
 void uS_EndFrameDraw() {
     uS_ShowCursor();
+
+    // DEBUG: remove this later!
+    if (IsPowerSwitchPressed()) asm ("jmp 0x0000");
+
     WaitVsync(1);
 }
 

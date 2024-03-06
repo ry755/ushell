@@ -21,8 +21,5 @@ int main() {
     if (!uS_BootloaderCheck()) uS_Die("Bootloader?");
     uS_SyscallTrampolineInstall();
 
-    sd_file_t startup_app;
-    if (!uS_SDOpenFile(&startup_app, STARTUP_APP, SD_READ)) uS_Die("Startup app?");
-    uS_FlashFile(&startup_app, USER_FLASH_PAGE);
-    asm ("jmp 0x8000");
+    uS_Exec(STARTUP_APP);
 }
