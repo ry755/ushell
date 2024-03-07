@@ -8,10 +8,14 @@ uShell is a work-in-progress operating system kernel for the [Uzebox game consol
 
 ![Photo of uShell's paint app](/docs/screenshots/photo-paint.jpg)
 
+# Requirements
+
+The uShell kernel requires a 128KB SPI RAM expansion, as well as any version of [Jubatian's Bootloader V5](https://uzebox.org/forums/viewtopic.php?t=9405).
+
 # Building
 
-Simply run `make`. Ensure you have the repo submodules cloned beforehand, you can do this by either cloning the repo with `--recursive` or after cloning
-by running `git submodule init && git submodule update`.
+Simply run `make`. Ensure you have the repo submodules cloned beforehand, you can do this by either cloning the repo with `--recursive` or after cloning by running `git submodule init && git submodule update`.
+To run, copy the bin/ushell.uze file and the bin/ushell directory to your Uzebox SD card. uShell expects to read its application files from the /ushell directory on the SD card.
 
 # Known Bugs
 
