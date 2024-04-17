@@ -71,6 +71,7 @@ INCLUDES = -I. -I"$(KERNEL_DIR)"
 all: $(UZEBIN_DIR)/packrom apps $(OUTDIR)/$(TARGET) $(OUTDIR)/$(GAME).hex $(OUTDIR)/$(GAME).lss $(OUTDIR)/$(GAME).uze size
 
 $(UZEBIN_DIR)/packrom:
+	mkdir -p $(UZEBIN_DIR)
 	cd $(UZEBIN_DIR)/.. && $(MAKE) tools
 
 apps: $(DIRS)
