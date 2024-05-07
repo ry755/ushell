@@ -228,7 +228,7 @@ void uS_EndFrameDraw() {
     uS_ShowCursor();
 
     // DEBUG: remove this later!
-    if (IsPowerSwitchPressed()) asm ("jmp 0x0000");
+    //if (IsPowerSwitchPressed()) asm ("jmp 0x0000");
 
     WaitVsync(1);
 }

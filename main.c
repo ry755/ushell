@@ -9,7 +9,7 @@
 #include "syscall.h"
 #include "video.h"
 
-#define STARTUP_APP "/ushell/desktop.bin"
+#define STARTUP_APP "desktop.bin"
 
 int main() {
     u8 sd_ok = uS_SDInit();
@@ -22,4 +22,5 @@ int main() {
     uS_SyscallTrampolineInstall();
 
     uS_Exec(STARTUP_APP);
+    uS_Die("Failed to exec startup app!");
 }

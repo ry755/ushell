@@ -12,9 +12,9 @@ void main(void) {
     sd_dir_t apps_dir;
     sd_file_info_t app_info;
     uS_EnableVideo(false);
-    if (!uS_OpenDir(&apps_dir, "/ushell")) {
+    if (!uS_OpenDir(&apps_dir, "/")) {
         uS_EnableVideo(true);
-        uS_BlitStr(PSTR("failed to open /ushell directory!"), 0, 0);
+        uS_BlitStr(PSTR("failed to open / directory!"), 0, 0);
         while (true) uS_WaitFrame();
     }
     for (u8 i = 0; i < APP_PAGE_SIZE; i++) {
@@ -31,10 +31,8 @@ void main(void) {
     while (true) {
         if (uS_GetMouseButtons() & LEFT_MOUSE_BUTTON) {
             uS_EnableVideo(false);
-            char app[21] = "/ushell/";
             u8 app_id = uS_GetMouseY() / 8 - 2;
-            strcat(app, &apps[app_id][0]);
-            uS_Exec(app);
+            uS_Exec(apps[app_id]);
             uS_EnableVideo(true);
             uS_BlitStr(PSTR("failed to execute application!"), 0, 0);
         }

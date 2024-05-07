@@ -82,7 +82,7 @@ $(OBJDIR):
 	mkdir $(OBJDIR)
 
 $(OUTDIR):
-	mkdir -p $(OUTDIR)/ushell
+	mkdir $(OUTDIR)
 
 $(DEPDIR):
 	mkdir $(DEPDIR)
