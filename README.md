@@ -15,7 +15,7 @@ The uShell kernel requires a 128KB SPI RAM expansion, as well as any version of 
 # Building
 
 Simply run `make`. Ensure you have the repo submodules cloned beforehand, you can do this by either cloning the repo with `--recursive` or after cloning by running `git submodule init && git submodule update`.
-To run, copy the bin/ushell.uze file and the bin/ushell directory to your Uzebox SD card. uShell expects to read its application files from the /ushell directory on the SD card.
+To run, copy the bin/ushell.uze file and the bin/*.bin files (such as desktop.bin) to your Uzebox SD card.
 
 # Known Bugs
 
