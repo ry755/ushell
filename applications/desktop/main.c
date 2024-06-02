@@ -35,6 +35,7 @@ void main(void) {
             uS_Exec(apps[app_id]);
             uS_EnableVideo(true);
             uS_BlitStr(PSTR("failed to execute application!"), 0, 0);
+            uS_BlitStrRam(apps[app_id], 248, 0);
         }
 
         uS_WaitFrame();
