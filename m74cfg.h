@@ -23,8 +23,5 @@
 #define M74_SPR_ENABLE     0
 #define M74_MSK_ENABLE     0
 #define M74_M67_ENABLE     1
-#define M74_PALBUF         0x0500 // needs 256 bytes
-#define M74_PAL_OFF        0x0600 // needs 16 bytes
-#define M74_VIDEO_STACK    0x0610 // needs 16 bytes
 
 #endif
