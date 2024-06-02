@@ -18,7 +18,7 @@ int main() {
         uS_BlitChar('0' + sd_ok, 0, 8);
         uS_Die("SD card?");
     }
-    if (!uS_BootloaderCheck()) uS_Die("Bootloader?");
+    if (!uS_BootloaderCheck()) uS_Die("Patched bootloader?");
     uS_SyscallTrampolineInstall();
 
     uS_Exec(STARTUP_APP);

@@ -13,25 +13,11 @@ u8 page_buffer[256];
 u8 uS_FlashPage(u8 *source, u8 target_page) {
     if (target_page >= 0xF0) return 0;
 
-    // this may look overly complicated, and it is.
-    // BUT, if we don't move the interrupt vectors then it will crash due to RWW
-    // not being enabled by the time a video interrupt comes in. the
-    // bootloader re-enables interrupts immediately after executing `spm`, which
-    // causes issues for us.
     asm volatile (
         "cli"           "\n\t"
-        "ldi r31, 1"    "\n\t" // ldi r31, (1 << ICVE)
-        "out 0x35, r31" "\n\t" // out MCUCR, r31
-        "ldi r31, 2"    "\n\t" // ldi r31, (1 << IVSEL) ; move vectors to bootloader
-        "out 0x35, r31" "\n\t" // out MCUCR, r31
         "movw r24, %0"  "\n\t"
         "mov r22, %1"   "\n\t"
-        "call 0xFFAA"   "\n\t" // call Prog_Page
-        "cli"           "\n\t"
-        "ldi r31, 1"    "\n\t" // ldi r31, (1 << ICVE)
-        "out 0x35, r31" "\n\t" // out MCUCR, r31
-        "ldi r31, 0"    "\n\t" // ldi r31, 0 ; move vectors back to start of flash
-        "out 0x35, r31" "\n\t" // out MCUCR, r31
+        "call 0xFF8C"   "\n\t" // call Prog_Page (must use patched bootloader!!)
         "sei"           "\n" ::
         "e" (source),
         "r" (target_page) :
@@ -64,7 +50,7 @@ void uS_Exec(char *path) {
 }
 
 bool uS_BootloaderCheck() {
-    if (pgm_read_byte(0xFFAA) != 0xDC) return false;
-    if (pgm_read_byte(0xFFAB) != 0x01) return false;
+    if (pgm_read_byte(0xFF8C) != 0xDC) return false;
+    if (pgm_read_byte(0xFF8D) != 0x01) return false;
     return true;
 }
