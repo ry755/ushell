@@ -6,9 +6,9 @@
 OUTPUT_FORMAT("elf32-avr","elf32-avr","elf32-avr")
 OUTPUT_ARCH(avr:5)
 __TEXT_REGION_ORIGIN__ = 0x8000;
-__DATA_REGION_ORIGIN__ = 0x800620; /* immediately after the video render stack */
+__DATA_REGION_ORIGIN__ = 0x800800;
 __TEXT_REGION_LENGTH__ = 0x7EFF;
-__DATA_REGION_LENGTH__ = 0x0AE0;
+__DATA_REGION_LENGTH__ = 0x0900;
 __EEPROM_REGION_LENGTH__ = DEFINED(__EEPROM_REGION_LENGTH__) ? __EEPROM_REGION_LENGTH__ : 64K;
 __FUSE_REGION_LENGTH__ = DEFINED(__FUSE_REGION_LENGTH__) ? __FUSE_REGION_LENGTH__ : 1K;
 __LOCK_REGION_LENGTH__ = DEFINED(__LOCK_REGION_LENGTH__) ? __LOCK_REGION_LENGTH__ : 1K;
@@ -200,7 +200,7 @@ SECTIONS
      PROVIDE (__noinit_end = .) ;
      _end = . ;
      PROVIDE (__heap_start = .) ;
-  }  > data
+  }  > data_us
   .eeprom  :
   {
     /* See .data above...  */
