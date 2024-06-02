@@ -4,11 +4,11 @@
 #include <avr/pgmspace.h>
 #include <uzebox.h>
 #include <spiram.h>
-#include <bootlib.h>
 #include <keyboard.h>
 
-#include "xram.h"
+#include "mouse.h"
 #include "video.h"
+#include "xram.h"
 
 #include "tiles.h"
 
@@ -61,15 +61,16 @@ static u16 const vramrow_offs[32U] PROGMEM = {
 static u16 under_cursor[8];
 static bool showing_cursor = false;
 static bool mouse_detected = false;
-static u16 cursor_x = 384 / 2;
-static u16 cursor_y = 216 / 2;
-
-static u16 framebuffer_addr;
+u16 cursor_x = 384 / 2;
+u16 cursor_y = 216 / 2;
 
 u8 keyboard_buffer = 0;
 u8 keyboard_mod_buffer = 0;
 
+static u16 framebuffer_addr;
+
 extern bool snesMouseEnabled;
+extern u16 mouse_state;
 
 static void uS_ShowCursor() {
     if (showing_cursor) return;
@@ -77,8 +78,8 @@ static void uS_ShowCursor() {
 
     // draw the cursor, saving what's under it
     // thanks to my friend mebibytedraco for helping with this!
-    u16 byte_off = (cursor_y * 384 + cursor_x) / 8;
-    u8 bit_off = (cursor_y * 384 + cursor_x) % 8;
+    u16 byte_off = (cursor_y * 384L + cursor_x) / 8L;
+    u8 bit_off = (cursor_y * 384L + cursor_x) % 8;
     for (u8 line = 0; line < 8; line++) {
         u8 high_byte = uS_XramReadU8(0, framebuffer_addr + byte_off);
         u8 low_byte = uS_XramReadU8(0, framebuffer_addr + byte_off + 1);
@@ -90,7 +91,7 @@ static void uS_ShowCursor() {
         sprite |= word;
         uS_XramWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
         uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
-        byte_off += 384 / 8;
+        byte_off += 384L / 8L;
     }
 }
 
@@ -98,11 +99,11 @@ static void uS_HideCursor() {
     if (!showing_cursor) return;
     showing_cursor = false;
 
-    u16 byte_off = (cursor_y * 384 + cursor_x) / 8;
+    u16 byte_off = (cursor_y * 384L + cursor_x) / 8L;
     for (u8 line = 0; line < 8; line++) {
         uS_XramWriteU8(0, framebuffer_addr + byte_off, under_cursor[line] >> 8);
         uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, under_cursor[line] & 0xFF);
-        byte_off += 384 / 8;
+        byte_off += 384L / 8L;
     }
 }
 
@@ -113,7 +114,7 @@ static void uS_UpdateMouse() {
     if (buttons & BTN_LEFT) cursor_x--;
     if (buttons & BTN_RIGHT) cursor_x++;*/
 
-    u16 mouse = ReadJoypadExt(0);
+    u16 mouse = mouse_state;
     s16 mx = cursor_x;
     s16 my = cursor_y;
 
@@ -157,6 +158,11 @@ static void uS_UpdateKeyboard() {
     }
 }
 
+void _emu_whisper(u16 port, u8 value) {
+    if (port==0x39 || port == 0) { u8 volatile *const _whisper_pointer1 = (u8 *)0x39; *_whisper_pointer1 = value; }
+    if (port==0x3A || port == 1) { u8 volatile *const _whisper_pointer2 = (u8 *)0x3A; *_whisper_pointer2 = value; }
+}
+
 void uS_VideoInit() {
     // set main configuration flags, display disabled
     m74_config = 0;
@@ -193,31 +199,37 @@ void uS_VideoInit() {
     m74_config |= M74_CFG_ENABLE;
     WaitVsync(8);
     snesMouseEnabled = true;
+    SetUserPostVsyncCallback(uS_ReadMouse);
     WaitVsync(20);
     uS_EndFrameDraw();
 }
 
 void uS_Die(char *string) {
     uS_HideCursor();
-    uS_BlitStrRam(string, 0, 0);
+    uS_BlitStrRam((char *)string, 0, 0);
     while (true);
 }
 
 // call this at the beginning of your frame loop
 void uS_BeginFrameDraw() {
     uS_HideCursor();
-    if ((DetectControllers() & 2) == 2) {
-        mouse_detected = true;
-        uS_UpdateMouse();
-    } else {
-        mouse_detected = false;
-    }
+    //if ((DetectControllers() & 2) == 2) {
+    //    mouse_detected = true;
+    //    uS_UpdateMouse();
+    //} else {
+    //    mouse_detected = false;
+    //}
+    uS_UpdateMouse();
     uS_UpdateKeyboard();
 }
 
 // call this at the end of your frame loop
 void uS_EndFrameDraw() {
     uS_ShowCursor();
+
+    // DEBUG: remove this later!
+    //if (IsPowerSwitchPressed()) asm ("jmp 0x0000");
+
     WaitVsync(1);
 }
 
@@ -251,7 +263,7 @@ void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
     if (mask == 0) mask = &default_mask[0];
 
     // thanks to my friend mebibytedraco for helping with this!
-    u16 byte_off = (y * 384 + x) / 8;
+    u16 byte_off = (y * 384L + x) / 8L;
     u8 bit_off = (y * 384 + x) % 8;
     for (u8 line = 0; line < 8; line++) {
         u8 high_byte = uS_XramReadU8(0, framebuffer_addr + byte_off);
@@ -263,7 +275,7 @@ void uS_Blit(u8 *bitmap, u8 *mask, u16 x, u16 y) {
         sprite |= word;
         uS_XramWriteU8(0, framebuffer_addr + byte_off, sprite >> 8);
         uS_XramWriteU8(0, framebuffer_addr + byte_off + 1, sprite & 0xFF);
-        byte_off += 384 / 8;
+        byte_off += 384L / 8L;
     }
 }
 

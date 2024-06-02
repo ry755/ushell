@@ -3,84 +3,90 @@
 #include <stdlib.h>
 #include <avr/pgmspace.h>
 #include <uzebox.h>
-#include <bootlib.h>
+#include <fatfs/ff.h>
+#include <fatfs/diskio.h>
 #include <string.h>
 
 #include "sd.h"
 
-u8 sd_buf[512];
-sdc_struct_t sd_struct;
+FATFS fs;
+bool sd_needs_reinit = true;
 
-extern bool snesMouseEnabled;
-bool old_sd_state;
+static u8 old_video_config;
 
-static void uS_SDStartOp() {
-    // we have to disable the mouse before accessing the SD card
-    // probably due to timing issues? not sure
-    old_sd_state = snesMouseEnabled;
-    snesMouseEnabled = false;
+// the video mode's SPI RAM accesses messes with SD card accesses,
+// so we disable it when needed
+static void uS_SDBeginOp() {
+    old_video_config = m74_config;
+    m74_config = 0;
+    if (sd_needs_reinit) {
+        disk_initialize(0);
+        sd_needs_reinit = false;
+    }
 }
 
 static void uS_SDEndOp() {
-    snesMouseEnabled = old_sd_state;
+    m74_config = old_video_config;
+    sd_needs_reinit = (bool)old_video_config;
 }
 
-bool uS_SDInit() {
-    sd_struct.bufp = &(sd_buf[0]);
-    if (FS_Init(&sd_struct) != 0) return false;
-    else return true;
-}
-
-bool uS_SDOpen(sd_file_name_t file_name, sd_file_t *file) {
-    uS_SDStartOp();
-
-    u32 result = FS_Find(&sd_struct,
-        ((u16)(file_name[0]) << 8) |
-        ((u16)(file_name[1])),
-        ((u16)(file_name[2]) << 8) |
-        ((u16)(file_name[3])),
-        ((u16)(file_name[4]) << 8) |
-        ((u16)(file_name[5])),
-        ((u16)(file_name[6]) << 8) |
-        ((u16)(file_name[7])),
-        ((u16)(file_name[8]) << 8) |
-        ((u16)(file_name[9])),
-        ((u16)(file_name[10]) << 8) |
-        ((u16)(0))
-    );
-    if (result == 0) {
-        uS_SDEndOp();
-        return false;
-    }
-
-    FS_Select_Cluster(&sd_struct, result);
-    file->starting_cluster = result;
-    file->current_position = FS_Get_Pos(&sd_struct);
-
+u8 uS_SDInit() {
+    uS_SDBeginOp();
+    u8 result = f_mount(0, &fs);
     uS_SDEndOp();
+    return result;
+}
+
+// open a file
+// returns true on success
+bool uS_SDOpenFile(sd_file_t *file, char *path, u8 mode) {
+    uS_SDBeginOp();
+    u8 result = f_open(&(file->file), path, mode);
+    uS_SDEndOp();
+    return result == FR_OK;
+}
+
+// close a file, flushing any changes to disk
+// returns true on success
+bool uS_SDCloseFile(sd_file_t *file) {
+    uS_SDBeginOp();
+    u8 result = f_close(&(file->file));
+    uS_SDEndOp();
+    return result == FR_OK;
+}
+
+// open a directory
+// returns true on success
+bool uS_SDOpenDir(sd_dir_t *dir, char *path) {
+    uS_SDBeginOp();
+    u8 result = f_opendir(&(dir->dir), path);
+    uS_SDEndOp();
+    return result == FR_OK;
+}
+
+// read bytes from a file into the specified buffer
+// returns the number of bytes actually read
+u16 uS_SDReadFile(sd_file_t *file, u16 bytes_to_read, u16 byte_offset, u8 *buffer) {
+    u16 bytes_read;
+    uS_SDBeginOp();
+    if (f_lseek(&(file->file), (DWORD)byte_offset) != FR_OK) { uS_SDEndOp(); return 0; }
+    if (f_read(&(file->file), buffer, bytes_to_read, &bytes_read) != FR_OK) { uS_SDEndOp(); return 0; }
+    uS_SDEndOp();
+    return bytes_read;
+}
+
+// read a file info block from a directory, then increment to the next file
+// pass NULL for `file` to rewind the directory
+// returns true on success
+bool uS_SDReadDir(sd_dir_t *dir, sd_file_info_t *file) {
+    FILINFO file_info;
+    uS_SDBeginOp();
+    if (file == NULL) { f_readdir(&(dir->dir), 0); uS_SDEndOp(); return true; }
+    if (f_readdir(&(dir->dir), &file_info) != FR_OK) { uS_SDEndOp(); return false; }
+    uS_SDEndOp();
+
+    strncpy(file->name, file_info.fname, 13);
+    file->attribute = file_info.fattrib;
+    file->size = file_info.fsize;
     return true;
-}
-
-// read a sector in an opened file and return a pointer to the internal sector buffer
-// BUG:  FS_Next_Sector() doesn't seem to ever return an EOF indicator, even though the docs say it does
-//       this means you won't be able to detect the end of the file!! keep this in mind
-// NOTE: you must copy the sector data to your own buffer if you intend to access it for long periods of time!
-//       reading another sector (even a sector in a different file) will overwrite the internal buffer!
-const u8 *uS_SDReadFileSector(sd_file_t *file, u32 sector) {
-    uS_SDStartOp();
-
-    // set the cluster and sector positions
-    FS_Select_Cluster(&sd_struct, file->starting_cluster);
-    FS_Set_Pos(&sd_struct, file->current_position);
-    if (FS_Get_Sector(&sd_struct) != sector) {
-        FS_Reset_Sector(&sd_struct);
-        for (u32 i = 0; i < sector; i++) FS_Next_Sector(&sd_struct);
-    }
-    file->current_position = FS_Get_Pos(&sd_struct);
-
-    // read a sector and return a pointer to the sector buffer
-    FS_Read_Sector(&sd_struct);
-
-    uS_SDEndOp();
-    return &sd_buf[0];
 }

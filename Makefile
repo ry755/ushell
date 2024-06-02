@@ -16,7 +16,7 @@ DIRS    = $(OUTDIR) $(OBJDIR) $(DEPDIR)
 ## Kernel settings
 UZEBIN_DIR = kernel-tools/bin
 KERNEL_DIR = kernel-tools/kernel
-KERNEL_OPTIONS = -DVIDEO_MODE=748 -DSNES_MOUSE=1 -DINTRO_LOGO=0 -DSOUND_MIXER=MIXER_TYPE_INLINE
+KERNEL_OPTIONS = -DVIDEO_MODE=748 -DSNES_MOUSE=1 -DINTRO_LOGO=0 -DSOUND_MIXER=MIXER_TYPE_INLINE -DCONTROLLERS_VSYNC_READ=0
 
 
 ## Options common to compile, link and assembly rules
@@ -52,9 +52,12 @@ OBJECTS += $(OBJDIR)/uzeboxSoundEngine.o
 OBJECTS += $(OBJDIR)/uzeboxSoundEngineCore.o
 OBJECTS += $(OBJDIR)/uzeboxVideoEngine.o
 OBJECTS += $(OBJDIR)/spiram.o
-OBJECTS += $(OBJDIR)/bootlib.o
 OBJECTS += $(OBJDIR)/keyboard.o
+OBJECTS += $(OBJDIR)/mmc.o
+OBJECTS += $(OBJDIR)/ff.o
+
 OBJECTS += $(OBJDIR)/flash.o
+OBJECTS += $(OBJDIR)/mouse.o
 OBJECTS += $(OBJDIR)/sd.o
 OBJECTS += $(OBJDIR)/syscall.o
 OBJECTS += $(OBJDIR)/video.o
@@ -65,10 +68,14 @@ OBJECTS += $(OBJDIR)/$(GAME).o
 INCLUDES = -I. -I"$(KERNEL_DIR)"
 
 ## Build
-all: $(UZEBIN_DIR)/packrom $(OUTDIR)/$(TARGET) $(OUTDIR)/$(GAME).hex $(OUTDIR)/$(GAME).lss $(OUTDIR)/$(GAME).uze size
+all: $(UZEBIN_DIR)/packrom apps $(OUTDIR)/$(TARGET) $(OUTDIR)/$(GAME).hex $(OUTDIR)/$(GAME).lss $(OUTDIR)/$(GAME).uze size
 
 $(UZEBIN_DIR)/packrom:
+	mkdir -p $(UZEBIN_DIR)
 	cd $(UZEBIN_DIR)/.. && $(MAKE) tools
+
+apps: $(DIRS)
+	cd applications && $(MAKE)
 
 ## Directories
 $(OBJDIR):
@@ -99,16 +106,21 @@ $(OBJDIR)/uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c $(DIRS)
 $(OBJDIR)/spiram.o: $(KERNEL_DIR)/spiram.s $(DIRS)
 	$(CC) $(INCLUDES) $(ASMFLAGS) -c $< -o $@
 
-$(OBJDIR)/bootlib.o: $(KERNEL_DIR)/bootlib.s $(DIRS)
-	$(CC) $(INCLUDES) $(ASMFLAGS) -c $< -o $@
-
 $(OBJDIR)/keyboard.o: $(KERNEL_DIR)/keyboard.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/mmc.o: $(KERNEL_DIR)/fatfs/mmc.c $(DIRS)
+	$(CC) $(INCLUDES) $(CFLAGS) -Wno-unused-variable -c $< -o $@
+
+$(OBJDIR)/ff.o: $(KERNEL_DIR)/fatfs/ff.c $(DIRS)
+	$(CC) $(INCLUDES) $(CFLAGS) -Wno-strict-aliasing -c $< -o $@
 
 ## Compile game sources
 $(OBJDIR)/$(GAME).o: main.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 $(OBJDIR)/flash.o: flash.c $(DIRS)
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+$(OBJDIR)/mouse.o: mouse.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 $(OBJDIR)/sd.o: sd.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
@@ -145,4 +157,5 @@ size: $(OUTDIR)/${TARGET}
 ## Clean target
 .PHONY: clean
 clean:
+	cd applications && $(MAKE) clean
 	-rm -rf $(DIRS)

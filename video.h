@@ -3,6 +3,8 @@
 
 #include <uzebox.h>
 
+void _emu_whisper(u16 port, u8 value);
+
 void uS_VideoInit();
 void uS_Die(char *string);
 void uS_BeginFrameDraw();
