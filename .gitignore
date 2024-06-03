@@ -4,6 +4,7 @@ esp.cfg
 obj
 .vscode
 
+tests/*.app
 tests/*.bin
 tests/*.elf
 tests/*.map
