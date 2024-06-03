@@ -4,6 +4,21 @@
 #define APP_PAGE_SIZE 25
 
 char apps[APP_PAGE_SIZE][13];
+u8 number_of_apps = 0;
+
+void AddApp(char *name) {
+    u8 index = number_of_apps++;
+    strncpy(&apps[index][0], name, 13);
+    uS_BlitStrRam(&apps[index][0], 8, index * 8 + 16);
+}
+
+bool CheckAppName(char *name) {
+    name += strnlen(name, 13) - 3;
+    if (strncmp(name, "APP", 3) == 0)
+        return true;
+    else
+        return false;
+}
 
 void main(void) {
     uS_BeginFrameDraw();
@@ -20,8 +35,8 @@ void main(void) {
     for (u8 i = 0; i < APP_PAGE_SIZE; i++) {
         memset(&apps[i][0], 0, 13);
         if (uS_ReadDir(&apps_dir, &app_info)) {
-            strncpy(&apps[i][0], app_info.name, 13);
-            uS_BlitStrRam(&apps[i][0], 8, i * 8 + 16);
+            if (CheckAppName(app_info.name))
+                AddApp(app_info.name);
         } else {
             break;
         }
