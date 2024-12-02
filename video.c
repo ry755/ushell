@@ -71,6 +71,7 @@ static u16 framebuffer_addr;
 
 extern bool snesMouseEnabled;
 extern u16 mouse_state;
+extern u16 mouse_buttons;
 
 static void uS_ShowCursor() {
     if (showing_cursor) return;
@@ -149,6 +150,7 @@ static void uS_UpdateKeyboard() {
             case KB_DOWN: cursor_y += 2; break;
             case KB_LEFT: cursor_x -= 2; break;
             case KB_RIGHT: cursor_x += 2; break;
+            case KB_END: mouse_buttons = (2 << 8);
             default: break;
         }
         if ((s16)cursor_x < 0) cursor_x = 0;
