@@ -11,6 +11,7 @@ CC      = avr-gcc
 OUTDIR  = bin
 OBJDIR  = obj
 DEPDIR  = dep
+SRCDIR  = src
 DIRS    = $(OUTDIR) $(OBJDIR) $(DEPDIR)
 
 ## Kernel settings
@@ -39,7 +40,7 @@ LDFLAGS += -Wl,-Map=$(OUTDIR)/$(GAME).map
 LDFLAGS += -Wl,-gc-sections
 
 ## Setup for Mode 74 stuff
-CFLAGS  += -include m74cfg.h
+CFLAGS  += -include $(SRCDIR)/m74cfg.h
 
 ## Intel Hex file production flags
 HEX_FLASH_FLAGS = -R .eeprom
@@ -65,7 +66,7 @@ OBJECTS += $(OBJDIR)/xram.o
 OBJECTS += $(OBJDIR)/$(GAME).o
 
 ## Include Directories
-INCLUDES = -I. -I"$(KERNEL_DIR)"
+INCLUDES = -I"$(SRCDIR)" -I"$(KERNEL_DIR)"
 
 ## Build
 all: $(UZEBIN_DIR)/packrom apps $(OUTDIR)/$(TARGET) $(OUTDIR)/$(GAME).hex $(OUTDIR)/$(GAME).lss $(OUTDIR)/$(GAME).uze size
@@ -116,19 +117,19 @@ $(OBJDIR)/ff.o: $(KERNEL_DIR)/fatfs/ff.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -Wno-strict-aliasing -c $< -o $@
 
 ## Compile game sources
-$(OBJDIR)/$(GAME).o: main.c $(DIRS)
+$(OBJDIR)/$(GAME).o: $(SRCDIR)/main.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
-$(OBJDIR)/flash.o: flash.c $(DIRS)
+$(OBJDIR)/flash.o: $(SRCDIR)/flash.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
-$(OBJDIR)/mouse.o: mouse.c $(DIRS)
+$(OBJDIR)/mouse.o: $(SRCDIR)/mouse.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
-$(OBJDIR)/sd.o: sd.c $(DIRS)
+$(OBJDIR)/sd.o: $(SRCDIR)/sd.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
-$(OBJDIR)/syscall.o: syscall.c $(DIRS)
+$(OBJDIR)/syscall.o: $(SRCDIR)/syscall.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
-$(OBJDIR)/video.o: video.c $(DIRS)
+$(OBJDIR)/video.o: $(SRCDIR)/video.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
-$(OBJDIR)/xram.o: xram.c $(DIRS)
+$(OBJDIR)/xram.o: $(SRCDIR)/xram.c $(DIRS)
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 ## Link
